@@ -1,0 +1,153 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Galaxy Animation</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #202c32;
+    color: white;
+    font-family: Arial, sans-serif;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+h1 {
+    text-align: center;
+    margin-top: 35px;
+    font-size: clamp(30px, 5vw, 55px);
+    font-weight: bold;
+}
+
+h1 span {
+    color: #a8f05b;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: calc(100vh - 110px);
+}
+</style>
+</head>
+
+<body>
+
+<h1><span>Galaxy</span> Animation</h1>
+<canvas id="galaxy"></canvas>
+
+<script>
+const canvas = document.getElementById("galaxy");
+const ctx = canvas.getContext("2d");
+
+let width, height;
+let particles = [];
+let rotation = 0;
+
+function resizeCanvas() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    width = canvas.clientWidth;
+    height = canvas.clientHeight;
+
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    createGalaxy();
+}
+
+function createGalaxy() {
+    particles = [];
+
+    const count = Math.min(
+        4000,
+        Math.max(1200, Math.floor(width * height / 180))
+    );
+
+    for (let i = 0; i < count; i++) {
+        const arm = Math.floor(Math.random() * 4);
+        const distance = Math.pow(Math.random(), 0.65) *
+                         Math.min(width * 0.43, height * 0.43);
+
+        particles.push({
+            distance: distance,
+            angle: arm * Math.PI / 2 +
+                   distance * 0.025 +
+                   (Math.random() - 0.5) * 0.8,
+            size: Math.random() * 1.7 + 0.3,
+            color: Math.random() < 0.25
+                ? "#ff5c91"
+                : Math.random() < 0.25
+                ? "#ffb347"
+                : "#ffe1a0",
+            speed: Math.random() * 0.0008 + 0.0002
+        });
+    }
+}
+
+function animate() {
+    ctx.clearRect(0, 0, width, height);
+
+    const cx = width / 2;
+    const cy = height / 2 + 20;
+    const maxRadius = Math.min(width * 0.43, height * 0.43);
+
+    // Galaxy's glowing center
+    const glow = ctx.createRadialGradient(
+        cx, cy, 0,
+        cx, cy, maxRadius
+    );
+
+    glow.addColorStop(0, "rgba(255,240,180,0.95)");
+    glow.addColorStop(0.08, "rgba(255,155,65,0.6)");
+    glow.addColorStop(0.3, "rgba(255,75,100,0.18)");
+    glow.addColorStop(1, "rgba(10,15,25,0)");
+
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, width, height);
+
+    // Draw rotating galaxy particles
+    particles.forEach(p => {
+        p.angle += p.speed;
+
+        const x = cx + Math.cos(p.angle + rotation) *
+                        p.distance;
+
+        const y = cy + Math.sin(p.angle + rotation) *
+                        p.distance * 0.48;
+
+        const twinkle = 0.65 + Math.random() * 0.35;
+
+        ctx.globalAlpha = twinkle;
+        ctx.fillStyle = p.color;
+
+        ctx.beginPath();
+        ctx.arc(x, y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+    });
+
+    ctx.globalAlpha = 1;
+    rotation += 0.0005;
+
+    requestAnimationFrame(animate);
+}
+
+window.addEventListener("resize", resizeCanvas);
+
+resizeCanvas();
+animate();
+</script>
+
+</body>
+</html>
